@@ -1,0 +1,40 @@
+#Just run#
+#docker-compose up#
+
+version: '3.4'
+
+#MYSQL Container#
+#inside container run: "mysql -p"#
+services:
+  databasemysql:
+   build:
+    context: .
+    target: databasemysql
+   image: backend_node:databasemysql
+   ports: 
+    - 3306:3306
+   networks:
+     - redeapi
+   stdin_open: true
+   tty: true
+
+
+#MONGO CONTAINER#
+#inside container run: "mongo"#
+  databasemongo:
+   build:
+    context: .
+    target: databasemongo
+   image: backend_node:databasemongo
+   ports:
+    - 27017:27017
+   command: ['mongod']
+   networks:
+     - redeapi
+   stdin_open: true
+   tty: true
+
+networks:
+    redeapi:
+volumes:
+    dbdata:
