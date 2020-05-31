@@ -5,6 +5,8 @@ const bcrypt = require('bcrypt-nodejs')
 //It was set inside "index.js"
 module.exports = app => {
 
+    //Validation functions
+    //Remember the functions below throws msg as error
     const { existsOrError, notExistsOrError, equalsOrError } = app.api.validations
 
     //Function to encrypt Password with Salt
@@ -19,11 +21,11 @@ module.exports = app => {
         //Destructure from JSON Request (was "body-parsed")
         const user = { ...req.body }
 
-        //If informed, set id propertie
+        //Check for URL params
         if (req.params.id) user.id = req.params.id
 
         try {
-            //Check data
+            //Validate request data
             existsOrError(user.name, 'Name not informed')
             existsOrError(user.email, 'Email not informed')
             existsOrError(user.password, 'Password not informed')
@@ -52,7 +54,7 @@ module.exports = app => {
         //"Clear" the password confirmation
         delete user.confirmPassword
 
-        //If user found...
+        //IF has Id (set by URL PARAM)...
         if (user.id) {
             app.db('users')
                 //Update...
@@ -64,10 +66,9 @@ module.exports = app => {
                 })
                 .catch((err) => {
                     //500 - Something wrong with server-side
-                    console.log(err);
-                    res.status(500).send(err.sql)
+                    res.status(500).send(err)
                 })
-        } else { //If user not found...
+        } else { //IF dont have ID (URL PARAM)...
             app.db('users')
                 //Insert...
                 .insert(user)
@@ -83,17 +84,35 @@ module.exports = app => {
 
     }
 
-    //Get User
+    //Get Users 
     const get = (req, res) => {
         app.db('users')
+            //Dont need the password
             .select('id', 'name', 'email', 'admin')
             .then((users) => { 
                 res.json(users) 
             })
             .catch((err)=> {
+                //500 - Something wrong with server-side
                 res.status(500).send(err)
             })
     }
 
-    return { save, get }
+    //Get User
+    const getById = (req, res) => {
+        app.db('users')
+            //Dont need password
+            .select('id', 'name', 'email', 'admin')
+            .where({ id: req.params.id })
+            .first()
+            .then((users) => { 
+                res.json(users) 
+            })
+            .catch((err)=> {
+                //500 - Something wrong with server-side
+                res.status(500).send(err)
+            })
+    }
+
+    return { save, get, getById }
 }

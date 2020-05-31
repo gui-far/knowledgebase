@@ -14,6 +14,7 @@ exports.up = function(knex, Promise) {
         table.increments('id').primary()
         table.string('name').notNull()
         //The unsigned is need because incremets also add its
+        //This parentId referencing it own table, means a "self relasionship"
         table.integer('parentId').unsigned().references('id')
             .inTable('categories')
     })
