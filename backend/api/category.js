@@ -4,7 +4,7 @@ module.exports = app => {
 
     //Validation functions
     //Remember the functions below throws msg as error
-    const { existsOrError, notExistsOrError, equalsOrError } = app.api.validations
+    const { existsOrError, notExistsOrError } = app.api.validations
 
     //Create New or Update
     const save = (req, res) => {
@@ -65,12 +65,12 @@ module.exports = app => {
             notExistsOrError(subcategory, 'This Category has Subcategories')
 
             //Search and Check for Articles
-            const articles = await app.db('categories')
+            const articles = await app.db('articles')
                 .where({ categoryId: req.params.id })
             notExistsOrError(articles, 'This Category has Articles')
 
             //Check if any categories have been excluded, otherwise category not found
-            const rowsDeleted = await app.dbo('categories')
+            const rowsDeleted = await app.db('categories')
                 .where({ id: req.params.id }).del()
             notExistsOrError(rowsDeleted, 'Category not found')
 
@@ -168,10 +168,10 @@ module.exports = app => {
 
             //This is the function to use inside filter() function below
             //This will find the categories where parentId match with "major" category id
-            const isChild = node => node.parentId == parentNode.id
             
             //Create an propertie "children" inside "major" categories
-            parentNode.children = toTree(categories, categories.filter(isChild))
+            //Calling again the toTree function, but this time passing the childs where parentId match with current "major" category id
+            parentNode.children = toTree(categories, categories.filter(node => node.parentId == parentNode.id))
 
             //Call toTree, but this time, the second parameter will be passed
             //This second parameter will have the "Childs" from major categories
