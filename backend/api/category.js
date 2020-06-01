@@ -50,7 +50,7 @@ module.exports = app => {
                     res.status(500).send(err)
                 })
         }
-        
+
     }
 
     //Delete 
@@ -84,17 +84,19 @@ module.exports = app => {
 
     //Function that create patch for categories and subcategories "map"
     //So the function recieve this "categories" parameter
+    //And return creating and propertie "path" for each category
     const withPath = categories => {
 
         //This is an auxiliar function to find the parent category
         //So we recieve the categories array and the parentId
         const getParent = (categories, parentId) => {
-            //And check if each category correspond to             
+            //And check wich category corresponds to parentId           
             const parent = categories.filter(parent => parent.id === parentId)
-            //Return the parent category
+            //Return the found parent category
             return parent.length ? parent[0] : null
         }
 
+        //This is the function core algorythm
         const categoriesWithPath = categories.map(category => {
             //Here we get the category name
             let path = category.name
@@ -106,10 +108,12 @@ module.exports = app => {
                 //path = ParentCategory > ChildCategory
                 path = `${parent.name} > ${path}`
                 //Note that the second parameter is the "first" parent found above
+                //So now will found the "parent" of parent
                 parent = getParent(categories, parent.parentId)
             }
 
             //return object "plus" path
+            
             return { ...category, path }
 
         })
@@ -140,17 +144,56 @@ module.exports = app => {
     //Get Category by Id
     const getById = (req, res) => {
         app.db('categories')
-        .where({id: req.params.id})
-        .first()
-        .then((category) => {
-            res.json(category)
-        })
-        .catch((err) => {
-            //500 - Something wrong with server-side
-            res.status(500).send(err)
-        })
+            .where({ id: req.params.id })
+            .first()
+            .then((category) => {
+                res.json(category)
+            })
+            .catch((err) => {
+                //500 - Something wrong with server-side
+                res.status(500).send(err)
+            })
     }
 
-    return { save, remove, get, getById }
+    //Create a "nested" JSON with category hierarchy
+    const toTree = (categories, tree) => {
+
+        //In the first call, tree will be empty
+        
+        //In this case, filter/get only the categories without parentId (For the first loop)
+        if (!tree) tree = categories.filter(c => !c.parentId)
+        
+        //Here it will transform the "major" categories 
+        tree = tree.map(parentNode => {
+
+            //This is the function to use inside filter() function below
+            //This will find the categories where parentId match with "major" category id
+            const isChild = node => node.parentId == parentNode.id
+            
+            //Create an propertie "children" inside "major" categories
+            parentNode.children = toTree(categories, categories.filter(isChild))
+
+            //Call toTree, but this time, the second parameter will be passed
+            //This second parameter will have the "Childs" from major categories
+            //Now this child will become the "major", and algorythm will find another child
+            //This keeps until the last category
+
+            //return from map
+            return parentNode
+
+        })
+
+        //return from function
+        return tree;
+    }
+
+    //Call above functions
+    const getTree = (req, res) => {
+        app.db('categories')
+            .then(categories => res.json(toTree(categories)))
+            .catch(err => res.status(500).send(err))
+    }
+
+    return { save, remove, get, getById, getTree }
 
 }
