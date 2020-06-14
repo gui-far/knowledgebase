@@ -10,7 +10,7 @@ module.exports = app => {
     const { existsOrError, notExistsOrError, equalsOrError } = app.api.validations
 
     //Function to encrypt Password with Salt
-    const encryptPassword = (password) => {     
+    const encryptPassword = (password) => {
         const salt = bcrypt.genSaltSync(10)
         return bcrypt.hashSync(password, salt)
     }
@@ -24,6 +24,10 @@ module.exports = app => {
         //Check for URL params
         if (req.params.id) user.id = req.params.id
 
+        //Ensure that user role will be "false" (not admin)
+        if(!req.originalUrl.startsWith('/users')) user.admin = false
+        if(!req.user || !req.user.admin)
+
         try {
             //Validate request data
             existsOrError(user.name, 'Name not informed')
@@ -36,7 +40,7 @@ module.exports = app => {
             const userFromDb = await app.db('users')
                 .where({ email: user.email }).first()
 
-                console.log(userFromDb);
+            console.log(userFromDb);
 
             if (!user.id) {
                 console.log(userFromDb);
@@ -89,10 +93,10 @@ module.exports = app => {
         app.db('users')
             //Dont need the password
             .select('id', 'name', 'email', 'admin')
-            .then((users) => { 
-                res.json(users) 
+            .then((users) => {
+                res.json(users)
             })
-            .catch((err)=> {
+            .catch((err) => {
                 //500 - Something wrong with server-side
                 res.status(500).send(err)
             })
@@ -105,14 +109,38 @@ module.exports = app => {
             .select('id', 'name', 'email', 'admin')
             .where({ id: req.params.id })
             .first()
-            .then((users) => { 
-                res.json(users) 
+            .then((users) => {
+                res.json(users)
             })
-            .catch((err)=> {
+            .catch((err) => {
                 //500 - Something wrong with server-side
                 res.status(500).send(err)
             })
     }
 
-    return { save, get, getById }
+    //This will be a "soft delete"
+    //User will be deleted "virtually" only if he dont have any articles
+    const remove = async (req, res) => {
+        try {
+            //Check if user have articles
+            const articles = await app.db('articles')
+                .where({ userId: req.params.id })
+            notExistsOrError(articles, 'Usuário possui artigos')
+
+            //Make de "delete" (but its actually an update)
+            const rowsUpdated = await app.db('users')
+                .update({deletedAt: new Date()})
+                .where({id: req.params.id})
+
+            //If not update, user not found
+            existsOrError(rowsUpdated, 'Usuário não foi encontrado')
+
+            //204 - Everything OK - Without Content
+            res.status(204).send()
+        }catch(msg) {
+            res.status(400).send(msg)
+        }
+    }
+
+    return { save, get, getById, remove }
 }

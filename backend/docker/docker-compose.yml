@@ -28,7 +28,7 @@ services:
    image: backend_node:databasemongo
    ports:
     - 27017:27017
-   command: ['mongod']
+   command: ['mongod', '--bind_ip_all']
    networks:
      - redeapi
    stdin_open: true

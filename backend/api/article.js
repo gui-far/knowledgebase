@@ -79,7 +79,7 @@ module.exports = app => {
     const get = async (req, res) => {
         const page = req.query.page || 1
 
-        const result = await app.db('articles').count('id').first()
+        const result = await app.db('articles').count('id as count').first()
 
         const count = parseInt(result.count) //I HAVE AND ISSUE HERE, CANT GET COUNT VALEU, IT KEEPS UNDEFINED, I WILL FIX IT LATER
 

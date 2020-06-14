@@ -96,7 +96,7 @@ module.exports = app => {
             return parent.length ? parent[0] : null
         }
 
-        //This is the function core algorythm
+        //This is the "core" function 
         const categoriesWithPath = categories.map(category => {
             //Here we get the category name
             let path = category.name
@@ -165,12 +165,13 @@ module.exports = app => {
         
         //Here it will transform the "major" categories 
         tree = tree.map(parentNode => {
-
-            //This is the function to use inside filter() function below
-            //This will find the categories where parentId match with "major" category id
-            
+           
             //Create an propertie "children" inside "major" categories
-            //Calling again the toTree function, but this time passing the childs where parentId match with current "major" category id
+            //Calling again the toTree function, but this time passing the childs (parentId match with current "major" category id)
+            //In this new "toTree" call, the "tree" param will recieve the "Childs" and make all again
+
+            //!!!!!!!!! The "Core" of this logic risides calling toTree again but passing the childs recursively
+
             parentNode.children = toTree(categories, categories.filter(node => node.parentId == parentNode.id))
 
             //Call toTree, but this time, the second parameter will be passed
