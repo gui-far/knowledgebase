@@ -63,6 +63,8 @@ module.exports = app => {
             app.db('users')
                 //Update...
                 .update(user)
+                //Only update those aren't deleted
+                .whereNull('deletedAt')
                 .where({ id: user.id })
                 .then(() => {
                     //204 - Everything OK - Without Content
@@ -93,6 +95,8 @@ module.exports = app => {
         app.db('users')
             //Dont need the password
             .select('id', 'name', 'email', 'admin')
+            //Removing results deleted with "softDelete"
+            .whereNull('deletedAt')
             .then((users) => {
                 res.json(users)
             })
@@ -108,6 +112,7 @@ module.exports = app => {
             //Dont need password
             .select('id', 'name', 'email', 'admin')
             .where({ id: req.params.id })
+            .whereNull('deletedAt')
             .first()
             .then((users) => {
                 res.json(users)
