@@ -1,28 +1,35 @@
-//This Vuex is the state manager
-
+import axios from 'axios'
 import Vue from 'vue'
 import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
-    //State: Will honde some app states
     state: {
-        isMenuVisible: true,
-        user: {
-            name: 'User Mock',
-            email: 'mock@mock.com'
-        }
+        isMenuVisible: false,
+        user: null
     },
     mutations: {
-        //Function to change isMenuVisible between true and false
         toggleMenu(state, isVisible) {
-            
-            //when isVisible is defined by the function call, alternate
+            if(!state.user) {
+                state.isMenuVisible = false
+                return
+            }
+
             if(isVisible === undefined) {
                 state.isMenuVisible = !state.isMenuVisible
-            } else { //when isVisible is defined (true or false), change
+            } else {
                 state.isMenuVisible = isVisible
+            }
+        },
+        setUser(state, user) {
+            state.user = user
+            if(user) {
+                axios.defaults.headers.common['Authorization'] = `bearer ${user.token}`
+                state.isMenuVisible = true
+            } else {
+                delete axios.defaults.headers.common['Authorization']
+                state.isMenuVisible = false
             }
         }
     }

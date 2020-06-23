@@ -1,21 +1,63 @@
 <template>
-    <!-- With this v-show, the menu will hide -->
-    <!-- But the content will not "fill" the blank space -->
-    <!-- So inside App.js, we need to aply a class (that will "fill" the blank space) to the Content component according to isMenuVisible -->
     <aside class="menu" v-show="isMenuVisible">
-        
+        <div class="menu-filter">
+            <i class="fa fa-search fa-lg"></i>
+            <input type="text" placeholder="Digite para filtrar..."
+                v-model="treeFilter" class="filter-field">
+        </div>
+        <Tree :data="treeData" :options="treeOptions"
+            :filter="treeFilter" ref="tree" />
     </aside>
 </template>
 
 <script>
-
-//This will enable the access to the app state directly
 import { mapState } from 'vuex'
+import Tree from 'liquor-tree'
+import { baseApiUrl } from '@/global'
+import axios from 'axios'
 
 export default {
     name: 'Menu',
-    //Here we can define wich functions will be accessed
-    computed: mapState(['isMenuVisible'])
+    components: { Tree },
+    computed: mapState(['isMenuVisible']),
+    data: function() {
+        return {
+            treeFilter: '',
+            treeData: this.getTreeData(),
+            treeOptions: {
+                //Liquor needs 'text' propertie to work properly
+                propertyNames: { 'text': 'name' },
+                filter: { emptyText: 'Categoria não encontrada' }
+            }
+        }
+    },
+    methods: {
+        getTreeData() {
+            const url = `${baseApiUrl}/categories/tree`
+
+            //!!!ATTENTION HERE!!!
+            //Not using ".then()"
+            //Because liquor-tree "understands" promises and waits for the data
+            return axios.get(url).then(res => res.data)
+        },
+        onNodeSelect(node) {
+            //This is how you can "go" an link/route
+            //Will be used inside mounted
+            //This node is passed by Tree
+            this.$router.push({
+                name: 'articlesByCategory',
+                params: { id: node.id }
+            })
+
+            if(this.$mq === 'xs' || this.$mq === 'sm') {
+                this.$store.commit('toggleMenu', false)
+            }
+        }
+    },
+    mounted() {
+        //This $ref can be used when REF 
+        this.$refs.tree.$on('node:selected', this.onNodeSelect)
+    }
 }
 </script>
 
@@ -23,10 +65,54 @@ export default {
     .menu {
         grid-area: menu;
         background: linear-gradient(to right, #232526, #414345);
-        
-        display: flex;
-        flex-direction: column; /*Default value for display: flex is row, but here we need column*/
-        flex-wrap: wrap;    /*Will break the line if the element reachs minimun width (make sens when using "flex-grow" and "min-width")*/
 
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+    }
+
+    .menu a,
+    .menu a:hover {
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .menu .tree-node.selected > .tree-content,
+    .menu .tree-node .tree-content:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .tree-arrow.has-child {
+        filter: brightness(2);
+    }
+
+    .menu .menu-filter {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        margin: 20px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #AAA;
+    }
+
+    .menu .menu-filter i {
+        color: #AAA;
+        margin-right: 10px;
+    }
+
+    .menu input {
+        color: #CCC;
+        font-size: 1.3rem;
+        border: 0;
+        outline: 0;
+        width: 100%;
+        background: transparent;
+    }
+
+    .tree-filter-empty {
+        color: #CCC;
+        font-size: 1.3rem;
+        margin-left: 20px;
     }
 </style>

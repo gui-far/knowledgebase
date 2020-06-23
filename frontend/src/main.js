@@ -10,11 +10,17 @@ import './config/bootstrap'
 //Toasted
 import './config/msgs'
 
+//Cehck for axios errors
+import './config/axios'
+
 //State manager
 import store from './config/store'
 
 //Router (manage navigation)
 import router from './config/router'
+
+//Importing MediaQuery (based on Bootstrap)
+import './config/mq'
 
 Vue.config.productionTip = false
 

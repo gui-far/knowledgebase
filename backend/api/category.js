@@ -10,7 +10,11 @@ module.exports = app => {
     const save = (req, res) => {
 
         //Destructure from JSON Request (was "body-parsed")
-        const category = { ...req.body }
+        const category = { 
+            id: req.body.id,
+            name: req.body.name,
+            parentId: req.body.parentId
+         }
 
         //Check for URL params
         if (req.params.id) category.id = req.params.id
@@ -72,10 +76,11 @@ module.exports = app => {
             //Check if any categories have been excluded, otherwise category not found
             const rowsDeleted = await app.db('categories')
                 .where({ id: req.params.id }).del()
-            notExistsOrError(rowsDeleted, 'Category not found')
+            existsOrError(rowsDeleted, 'Category not found')
 
             //204 - Everything OK - Without Content
             res.status(204).send()
+
         } catch (msg) {
             //400 - Something wrong with user-side
             res.status(400).send(msg)

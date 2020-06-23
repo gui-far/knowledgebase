@@ -1,17 +1,16 @@
-//Importing vue and router
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-//Importing components
 import Home from '@/components/home/Home'
 import AdminPages from '@/components/admin/AdminPages'
+import ArticlesByCategory from '@/components/article/ArticlesByCategory'
+import ArticleById from '@/components/article/ArticleById'
+import Auth from '@/components/auth/Auth'
 
+import { userKey } from '@/global'
 
-//This is the app router
-//Will manage the "navigation" between pages and components
 Vue.use(VueRouter)
 
-//These are the routes
 const routes = [{
     name: 'home',
     path: '/',
@@ -19,13 +18,36 @@ const routes = [{
 }, {
     name: 'adminPages',
     path: '/admin',
-    component: AdminPages
+    component: AdminPages,
+    meta: { requiresAdmin: true }
+}, {
+    name: 'articlesByCategory',
+    path: '/categories/:id/articles',
+    component: ArticlesByCategory
+}, {
+    name: 'articleById',
+    path: '/articles/:id',
+    component: ArticleById
+}, {
+    name: 'auth',
+    path: '/auth',
+    component: Auth
 }]
 
-//Use mode History
-//I already have explained this "mode" propertie inside another gitHub example
-//But just to remember, you can have "history" or "hash"
-export default new VueRouter({
+const router = new VueRouter({
     mode: 'history',
     routes
 })
+
+router.beforeEach((to, from, next) => {
+    const json = localStorage.getItem(userKey)
+
+    if(to.matched.some(record => record.meta.requiresAdmin)) {
+        const user = JSON.parse(json)
+        user && user.admin ? next() : next({ path: '/' })
+    } else {
+        next()
+    }
+})
+
+export default router

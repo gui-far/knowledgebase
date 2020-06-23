@@ -73,7 +73,7 @@ module.exports = app => {
     }
 
     //Pagination Limit
-    const limit = 10
+    const limit = 3
 
     //This get will have pagination feature
     const get = async (req, res) => {

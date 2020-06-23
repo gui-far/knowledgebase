@@ -13,10 +13,11 @@
     <!-- Dropdown -->
     <div class="user-dropdown-content">
       <!-- Attention here, it will use the router link -->
-      <router-link to="/admin">
+      <!--Here will check if use is admin-->
+      <router-link to="/admin" v-if="user.admin">
         <i class="fa fa-cogs"></i> Administracao
       </router-link>
-      <a href>
+      <a href @click.prevent="logout">
         <i class="fa fa-sign-out"></i> Sair
       </a>
     </div>
@@ -25,6 +26,10 @@
 </template>
 
 <script>
+
+//Get key from localStorage
+import {userKey} from '@/global'
+
 //Acces state data and methods
 import { mapState } from "vuex";
 
@@ -35,7 +40,14 @@ export default {
   name: "UserDropdown",
   components: { Gravatar },
   //Get user from state manager
-  computed: mapState(["user"])
+  computed: mapState(["user"]),
+  methods: {
+    logout() {
+      localStorage.removeItem(userKey)
+      this.$store.commit('setUser', null)
+      this.$router.push({name: 'auth'})
+    }
+  }
 };
 </script>
 
